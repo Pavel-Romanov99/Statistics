@@ -6,7 +6,9 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(MASS)
-library(homedata)
+install.packages('UsingR')
+library('UsingR')
+library(magrittr)
 ```
 
 От упражнение 1
@@ -33,82 +35,789 @@ ordered_by_two_columns <- m1[ordered2, ]
 
 ```{r}
 #2.
+#most and least expensive in 2000
+most <- which.max(homedata$y2000)
+least <- which.min(homedata$y2000)
+
+#prices in 1970
+homedata$y1970[most]
+homedata$y1970[least]
+
+#top five most expensive houses in 2000
+ordered_five <- homedata$y2000[order(homedata$y2000, decreasing = T)]
+
+top_five <- head(ordered_five ,5)
+
+#средната цена на 5те най-скъпи от 2000, но на техните цени от 1970
+mean_top_five <- mean(head(homedata$y1970[order(homedata$y2000, decreasing = T)], 5))
+
+#къщите, чийто цена е намаляла през 2000г.
+lowered <- homedata$y2000[which(homedata$y2000 < homedata$y1970)]
+
+percent_increase <- head(order(((homedata$y2000 - homedata$y1970) / homedata$y1970), 
+                           decreasing = T), 10)
+
+top_ten_increase <- homedata$y2000[percent_increase]
+
+```
+
+```{r}
+#3.
+#number of men
+num_men <- nrow(survey[survey$Sex == 'Male', ])
+
+#number of men smokers
+num_men_smokers <- nrow(survey[survey$Sex == 'Male' & survey$Smoke != 'Never', ])
+
+#mean height of all men
+mean(survey$Height[survey$Sex == 'Male'], na.rm = T)
+
+#height and sex of the top 6 youngest students
+youngest <- head(order(survey$Age), 6)
+
+survey$Sex[youngest]
+survey$Height[youngest]
+
+```
+
+От упражнение 2
+
+```{r}
+#1.
+#случайно избран човек да се окаже пушач
+survey$Smoke %>% table() %>% prop.table()
+
+#случайно избран мъж да се окаже редовно пушещ
+table(survey$Smoke, survey$Sex) %>% prop.table()
+
+#the same as
+smoking_men <- nrow(survey[survey$Sex == 'Male' & survey$Smoke == 'Regul', ])
+smoking_men / nrow(survey)
+
+#случаен мъж да се окаже редовен пушач.Стойността на всяка клетка се дели на сумата
+#от редовете
+prop.table(table(survey$Sex, survey$Smoke), 1)
+
+#случаен редовен пушач да се окаже мъж. Клетката се дели на сумата от колоните
+prop.table(table(survey$Sex, survey$Smoke), 2)
+
+```
+
+
+```{r}
+#2.
+#направете графики за пушачите и за пола
+
+#графики за пушенето
+pie(table(survey$Smoke))
+
+barplot(table(survey$Smoke))
+
+#графика за пушенето и пола
+barplot(table(survey$Smoke, survey$Sex), beside = T, legend = T)
+
+```
+
+
+```{r}
+#3.
+#за да разделим някаква информация на интервали, които ние искаме ползваме cut
+groups <- cut(survey$Age, c(0, 20, 25, 100), c('teenagers', 'students', 'adults'))
+
+#правим го на графика
+table(groups, survey$Smoke) %>%
+  barplot(legend = T, beside = T)
 
 
 ```
 
 
 ```{r}
+#4.
+s <- sd(survey$Height, na.rm = T)
+
+med <- median(survey$Height,na.rm = T)
+
+m <- mean(survey$Height, na.rm = T)
+
+quantile(survey$Height, na.rm = T)
+
+#брой различаващи се от средната височина с неповече от 2 стандартни отклонения
+cut(survey$Height, c(0, m - s, m + s, 300)) %>%
+  table()
+
+```
+
+От упражение 3
+
+```{r}
+#1.
+#графика според височината и пола
+boxplot(survey$Height ~ survey$Sex)
+
+#хистограма според височината и имаме плътността
+hist(survey$Height, probability = T)
+  lines(density(survey$Height, na.rm = T))
+  
+#хистограма според височината на мъжете и имаме линия за плътност
+men <- survey$Height[survey$Sex == 'Male']
+women <- survey$Height[survey$Sex == 'Female']
+
+hist(men, probability = T)
+  lines(density(men, na.rm = T))
+
+#графика за плътностите на височините на двата пола
+plot(density(men, na.rm = T), col='red')
+lines(density(women, na.rm = T), col='blue')
+  
+```
+
+
+```{r}
+#2.Histogram for the pulse of the students including the density
+hist(survey$Pulse, probability = T)
+lines(density(survey$Pulse, na.rm = T))
 
 ```
 
 
 ```{r}
+#3.
+#графиките за къщите от 1970 и 2000г.
+hist(homedata$y1970)
+lines(density(homedata$y1970, na.rm = T))
+
+hist(homedata$y2000)
+lines(density(homedata$y2000, na.rm = T))
+
+#сравняваме цените на къщите през 1970 и 2000г. и тяхната корелация
+boxplot(homedata) 
+
+correlation <- cor(homedata$y1970, homedata$y2000)
+
 
 ```
 
 
 ```{r}
+#4.
+View(anscombe)
+
+boxplot(anscombe)
 
 ```
 
+От упражнение 4
 
 ```{r}
 
-```
+dice = function(N = 100){
+  samples <- sample(1:6, size = 100, replace = TRUE)
+  
+  result <- sum(samples == 6)
+  
+  result
+}
 
+#емпирична вероятност
+dice() / 100
 
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
 
 ```
 
 ```{r}
 
-```
+birthdays = function(p = 0.5){
+  
+  prob = 1
+  for(i in 1:365){
+    prob = prob * (366 - i) / 365
+    
+    if(prob <  1 - p) break
+  }
+      return(i)
+}
 
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
+birthdays()
 
 ```
 
 ```{r}
 
+game_one = function(father, mother){
+  
+  wins = 0
+  
+  for(i in 1:1000){
+      vs_mom <- sample(0:1, 2, replace = T, prob = c(1 - mother, mother))
+      vs_dad <- sample(0:1, 1, replace = T, prob = c(1- father, father))
+  
+      if(vs_mom[1] == 1 & vs_dad == 1 | vs_mom[2] == 1 & vs_dad == 1){
+        wins = wins + 1
+      }
+      
+  }
+  return(wins/1000)
+}
+
+game_one(0.3, 0.4)
+
+```
+
+```{r}
+#4.
+
+presents = function(n = 20){
+  
+  for(j in 1:10000){
+      counter = 1
+  
+       x <- sample(1:n, n, replace = FALSE)
+  
+      for(i in 1:20){
+    
+      if(i == x[i]){
+        counter = counter + 1
+        break
+        }
+      }
+      return(n - counter)
+  }
+}
+
+presents() / 10000
+```
+
+```{r}
+#5.
+
+coins = function(){
+  for(i in 1:10000){
+    
+    x <- sample(0:1, 5, replace = T)
+    
+    if(x[1] == 1 & x[2] == 1 & x[3] == 0 & x[4] == 1 & x[5] == 0){
+      break
+    }
+  }
+  return(i)
+}
+
+coins()
+
+```
+От упражнение 5
+
+```{r}
+
+#вероятността да се паднат по-малко от 5 шестици при хвърляне на 30 зара
+pbinom(q = 4, size = 30, prob = 1/6) 
+
+#взимаме извадка от 10000 по 30 хвърляния на зар и го правим на таблица - това е емп. вер.
+thrown_dices <- rbinom(n = 10000, size = 30, prob = 1/6)
+
+thrown_dices %>% table() %>% prop.table()
+
+#това е теоритичната вероятност
+dbinom(0:6, size = 30, prob = 1/6)
+
+#с вероятност 0,75 да се паднат повече от колко шестици
+#понеже нямаме ф-я за повече от ние ще променим твърдението с неговото обратно
+#понеже qbinom показва колко най-много шестици ще се паднат за някаква вероятност
+#тоест ние го променяме колко най-много ще се паднат за 0.25 вероятност
+qbinom(p = 0.25, size = 30, prob = 1/6)
+qbinom(p = 0.75, size = 30, prob = 1/6, lower.tail = FALSE)
+
+```
+
+```{r}
+#2.
+
+#имаме пет неуспеха преди 3тия успех като вероятността за успех е 0.2
+# x е квантил
+dnbinom(x = 5, size = 3, prob = 0.2)
+
+#вероятност да са му нужни повече от 6 изтрела
+#q е бр. неуспехи
+pnbinom(q = 3, size = 3, prob = 0.2, lower.tail = FALSE)
+
+#вероятност да му трябват между 5 и 8 изтрела вкл.
+pnbinom(q = 5, size = 3, prob = 0.2) - pnbinom(1,3,0.2)
+
+
 ```
 
 ```{r}
 
+#3.
+balls = function(){
+  
+  total = 13
+  white_balls = 7
+  black_balls = 6
+  
+  num_white = 0
+  
+  for(i in 1:8){
+    
+    white_p = white_balls / total
+    black_p = black_balls / total
+    
+    x <- sample(c(0,1), size = 1, prob = c(black_p, white_p))
+    
+    if(x == 0){
+      black_balls = black_balls - 1
+    }
+    else{
+      white_balls = white_balls - 1
+      num_white = num_white + 1
+    }
+    
+    total = total - 1
+  }
+  num_white
+}
+
+replicated <- replicate(1000, balls())
+
+
+mean(replicated)
+
+sd(replicated)
+
+min(replicated)
+
+max(replicated)
+
+sum(replicated == 3) / 1000
+
+#емпирична вероятност
+emp <- replicated %>% table() %>% prop.table()
+
+#теоритична вероятност
+theor <- dhyper(0:8, 7, 6, 8)
+
+hist(c(emp, theor) , beside = T)
+
 ```
+
+```{r}
+#4.
+n = 100
+
+dbinom(2, size = n, prob = 5/(2*n))
+
+
+```
+От упражнение 6
+
+```{r}
+
+#нормално разпр с боксплот и хистограма
+normal <- rnorm(100, 5, sqrt(2))
+
+boxplot(normal)
+hist(normal)
+
+#правим някаква извадка
+  s <- seq(1, 8, 0.2)
+  
+#теоритична вероятност  
+dnorm(s, 5, sqrt(2))
+
+```
+
+```{r}
+#2.
+#n - брой сл. в
+#k - брой стойности, които ни дава всяко разпределение
+# fn - distribution function and ... is her arguments
+
+xsim <- function(n, k, fn, ...){
+  
+  #вектор пълен с нули. В него се събират стойностите поиндексно на всяко разпределение
+  s <- rep(0, k)
+  for (i in 1:n) {
+    s <- s + fn(k, ... )
+  }
+  #връща се вектор със сумата поиндексно на всички разпределения
+  s
+}
+
+xsim(100, 100, rexp) %>% hist()
+
+
+#това ни показва граничната теор - т.е при сумиране на независими еднакво разпр сл.в
+#че се получава нормално разпределение
+
+
+```
+
+```{r}
+#4. 
+#пъпеши по-малки от 20 т.е трето качество
+small <- pnorm(20, 25, 6)
+
+#първата половина от по-големите
+medium <- (1 - small) / 2
+
+big <- medium
+
+#колко да е голям за да бъде трето качество 
+qnorm(big + medium, 25, 6)
+
+```
+От упражнение 7
+
+```{r}
+#1. a)ако ни е известно станд отклонение
+n <- 20
+sd <- 2
+
+x <- rnorm(n, 3, sd)
+
+q <- qnorm(0.975, 3, 2)
+
+left_interval <- mean(x) - q * (sd / sqrt(n))
+
+right_interval <- mean(x) + q * (sd / sqrt(n))
+
+#b)ако не ни е известно станд отклонение
+
+n <- 20
+
+theor_mean <- 3
+theor_sd <- 2
+
+x <- rnorm(n, theor_mean, theor_sd)
+
+m <- mean(x)
+
+sd <- sd(x)
+
+q <- qt(p = 0.975, df = n - 1)
+
+left_interval <- m - q * sd / sqrt(n)
+
+right_interval <- m + q * sd / sqrt(n)
+
+#можем и така да намерим доверителния интервал ако знаем че х е нормално разпределено
+t.test(x)
+
+
+
+```
+
+```{r}
+#2.
+data1 <- c(10.0, 13.6, 13.2, 11.6, 12.5, 14.2, 14.9, 14.5, 13.4, 8.6, 11.5, 16.0, 14.2, 16.8, 17.9, 17.0)
+
+#проверяваме дали е нормално разпределена
+qqnorm(data1)
+
+#правим доверителните интервали
+t.test(data1)
+
+t.test(data1, conf.level = 0.90)
+
+
+```
+
+```{r}
+#3.a)
+qqnorm(rat)
+qqline(rat)
+
+t.test(rat, conf.level = 0.96)
+
+#b)
+#данните не са нормално разпределени затова ползваме wilcox.test
+qqnorm(exec.pay)
+qqline(exec.pay)
+
+wilcox.test(exec.pay, conf.int = T, conf.level = 0.96)
+#v)
+
+
+```
+
+```{r}
+#4.когато имаме пропорции ползваме това
+prop.test(87, 150, conf.level = 0.92)
+
+```
+
+```{r}
+#6.
+smoke_men <- nrow(survey[survey$Sex == 'Male' & survey$Smoke == 'Never', ])
+
+all_men <- nrow(survey[survey$Sex == 'Male', ])
+
+prop.test(smoke_men, all_men, conf.level = 0.90)
+
+```
+
+От упражнение 8
+
+```{r}
+
+#1.check for norm distr
+# H0 - EX = 3
+data2 <- rnorm(100, mean = 2, sd = 2)
+
+#p-value< 0.05 отхвърляме хипотезата
+t.test(data2, mu = 3, alternative = 'two.sided')
+
+t.test(data2, mu = 5, alternative = 'two.sided')
+
+```
+
+```{r}
+#2.H0: дните за почивка да са 24 при п-жалуе > 0.2
+data3 <- vacation
+
+#seems normal distributed
+qqnorm(data3)
+qqline(data3)
+
+#p-value < 0,2 отхвърляме нулевата хипотеза
+t.test(vacation, mu = 24, alternative = 'two.sided')
+
+```
+
+```{r}
+#3.H0 - 50 процента са доволни
+# H1 - < 50 процента са доволни
+
+prop.test(42, 100, p = 0.5, alternative = 'less')
+
+
+```
+
+```{r}
+#4.H0 - 5 minutes on the phone H1 - more than 5 mins
+data4 <- c(12.8, 3.5, 2.9, 9.4, 8.7, 0.7, 0.2, 2.8, 1.9, 2.8, 3.1, 15.8)
+
+qqnorm(data4)
+qqline(data4)
+#not normal distribution
+shapiro.test(data4)
+
+#we accept h0
+wilcox.test(data4, mu = 5, alternative = 'greater')
+
+```
+
+```{r}
+
+#5.h0 - live more than 100 days h1- less than 100 days
+data5 <- cancer$stomach
+
+qqnorm(data5)
+qqline(data5)
+#not normal distr
+shapiro.test(data5)
+
+#we accept h0
+wilcox.test(data5, mu = 100, alternative = 'less')
+
+```
+
+От упражение 9
+
+```{r}
+
+#1. H0 - equal h1 - not equal
+x <- c(4, 1, 7, 9)
+y <- c(10, 3, 2, 11)
+
+#не са норм разпр
+qqnorm(x)
+qqline(x)
+
+qqnorm(y)
+qqline(y)
+
+#приемаме нулевата хипотеза
+wilcox.test(x, y, alternative = 'two.sided')
+
+```
+
+```{r}
+
+#2.H0 - equal H1 - greater
+
+#we accept h1
+prop.test(c(351, 71), c(605, 195), alternative = 'greater')
+
+```
+
+```{r}
+
+#3.H0 - less H1 - more
+
+before <- c( 15, 10, 13, 7, 9, 8, 21, 9, 14, 8)
+after <- c(15, 14, 12, 8, 14, 10, 7, 16, 10, 15, 12)
+
+#normal distr
+qqnorm(before)
+qqline(before)
+
+qqnorm(after)
+qqline(after)
+
+t.test(before, after, alternative = 'greater')
+
+
+```
+
+```{r}
+
+#4.Х0 - че са равни Х1 - че са различни 
+
+radar1 <- c(70, 85, 63, 54, 65, 80, 75, 95, 52, 55)
+
+radar2 <- c(72, 86, 62, 55, 63, 80, 78, 90, 53, 57)
+
+#they are normally distributed
+qqnorm(radar1)
+qqline(radar1)
+
+qqnorm(radar2)
+qqline(radar2)
+
+t.test(radar1, radar2, alternative = 'two.sided', paired = T)
+
+
+```
+
+От упражнение 10
+
+```{r}
+#1.H0 - data elements are equal H1- they are not
+
+data6 <- c(125, 410, 310, 300, 318, 298, 148)
+
+#we cant accept H0
+chisq.test(data6)
+
+
+```
+
+```{r}
+#2.H0 - all digits have the same prob H1 - they don't  
+
+#взимаме първите 200 цифри и виждаме колко често всяка една се среща
+data7 <- pi2000[1:200] %>% table()
+
+#правим хи-квадрат теста
+#можем да приемем нулевата хипотеза
+chisq.test(data7)
+
+```
+
+
+```{r}
+#3.
+#теоритичните вероятности за срещането на буквите в англ език
+probs <- c(0.1270, 0.0956, 0.0817, 0.0751, 0.0697, 0.0675, 0.4834)
+
+#срещането на буквите от нашия текст
+letters <- c(102, 108, 90, 95, 82, 40, 519)
+
+#правим проверка дали са равни
+chisq.test(letters, p = probs)
+
+#p-value е много малко затова отхвърляме хипотезата
+
+```
+
+```{r}
+#4.искаме да видим дали колан / без колан са независими сл.в Това става като подадед
+#на ф-ята матрица и тя прави проверката, т.е нулевата хипотеза е, че данните са независими
+# иначе са зависими
+
+belt <- c(12813, 647, 359, 42)
+
+nobelt <- c(65963, 4000, 2642, 303)
+
+data8 <- matrix(belt, nrow = 1, ncol = 4)
+
+data9 <- rbind(data8, nobelt)
+
+#p-value е много малко следователно отхвърляме нулевата хипотеза, т.е са зависими
+#колан влияе на нараняването при катастрофа
+chisq.test(data9)
+
+```
+
+```{r}
+#5.
+
+mon <- c(44, 14, 15, 3)
+tues <- c(74, 25, 20, 5)
+wed <- c(79, 27, 20, 5)
+thurs <- c(72, 24, 23, 0)
+fri <- c(31, 10, 9, 0)
+
+final <- matrix(c(mon, tues, wed, thurs, fri), nrow = 5)
+
+#отхвърляме нулевата хипотеза че са независими , т.е има връзка между деня и качеството на стоката
+chisq.test(final)
+
+```
+
+От упражнение 11
+
+```{r}
+#1.Създаваме дата фрейм за данните
+patients_df <- data.frame(
+  age = c(18, 23, 25, 35, 65, 54, 34, 56, 72, 19, 23, 42, 18, 39, 37),
+  max_pulse = c(202, 186, 187, 180, 156, 169, 174, 172, 153, 199, 193, 174, 198, 183, 178)
+)
+
+#това е за модел на линейната регресия
+model1 <- lm(patients_df$max_pulse ~ patients_df$age, data = patients_df)
+
+
+plot(patients_df)
+abline(model1, col = "red")
+
+summ_lm <- summary(model1)
+
+n <- nrow(patients_df)
+
+# Тестване на хипотезата, че бета1 = -1
+# H0 :- "бета_1 = -1"
+
+# Стандартно отклонение(грешка) на оценката за бета1
+std_b1 <- summ_lm$coefficients[2, 2]
+
+# оценката за бета1
+est_b1 <- summ_lm$coefficients[2, 1]
+
+
+# Параметър за бета1 под нулева хипотеза
+b1_null_hyp <- -1
+
+# Изграждане на т-статистика  
+t_statistic <- (est_b1 - b1_null_hyp) / std_b1
+
+# Вероятност да наблюдваме тази т-статистика (или по-крайна) при положение, че е вярна нулевата хипотеза
+pval <- 2 * pt(t_statistic, n - 2, lower.tail = FALSE)
+
+
+# Прогнозиране за възрасти 30, 40 и 50
+predict.lm(
+  model1,
+  newdata = data.frame(age = c(30, 40, 50)),
+  interval = "confidence",
+  level = 0.9
+)
+
+```
+
+Oт упражнение 12
 
 ```{r}
 
