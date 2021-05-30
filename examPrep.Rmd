@@ -1,12 +1,18 @@
 ---
+output:
+  pdf_document: default
+  html_document: default
+---
+`---
 title: "ExamPrep"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
+chooseCRANmirror(graphics=FALSE, ind=1)
 knitr::opts_chunk$set(echo = TRUE)
-library(MASS)
 install.packages('UsingR')
+library(MASS)
 library('UsingR')
 library(magrittr)
 ```
@@ -201,9 +207,9 @@ correlation <- cor(homedata$y1970, homedata$y2000)
 
 ```{r}
 #4.
-View(anscombe)
+#View(anscombe)
 
-boxplot(anscombe)
+#boxplot(anscombe)
 
 ```
 
@@ -823,22 +829,282 @@ Oт упражнение 12
 
 ```
 
+От упражнение 13
+
 ```{r}
+#нулевата хипотеза е че имат равни средни трите извадки от данни
+#правим дата фрейм с данните от задачата
+  exams_df <- data.frame(
+examinor1 = c(5, 4, 4, 6, 4, 6, 3, 3, 4, 5),
+examinor2 = c(3, 2, 4, 5, 3, 4, 3, 4, 2, 4),
+examinor3 = c(4 ,6 ,4 ,2 ,4 ,5 ,5 ,3 ,6 ,4)
+) 
+
+ stacked_exam_df <- stack(exams_df)
+ 
+#гледаме дали са нормално разпределени данните
+ 
+qqnorm(exams_df$examinor1)
+qqline(exams_df$examinor1)
+shapiro.test(exams_df$examinor1)
+
+qqnorm(exams_df$examinor2)
+qqline(exams_df$examinor2)
+shapiro.test(exams_df$examinor2)
+ 
+qqnorm(exams_df$examinor3)
+qqline(exams_df$examinor3)
+shapiro.test(exams_df$examinor3)
+ 
+#и трите са нормално  разпределени тоест можем да направим тест дали имат еднакво средно ако са норм разпр
+
+oneway.test(values ~ ind, data = stacked_exam_df)
+
+#Не можем да отхвърлим хипотезата че имат равни средни
+#друг начин да се провери съшата хипотеза
+
+anova(lm(values ~ ind, data = stacked_exam_df))
+```
+
+```{r}
+#2.
+
+groupC <- InsectSprays$count[InsectSprays$spray == 'C']
+
+groupD <- InsectSprays$count[InsectSprays$spray == 'D']
+
+groupE <- InsectSprays$count[InsectSprays$spray == 'E']
+
+#изглежда ми сравнително нормално разпределени
+qqnorm(groupC)
+qqline(groupC)
+shapiro.test(groupC)
+
+qqnorm(groupD)
+qqline(groupD)
+shapiro.test(groupD)
+
+qqnorm(groupE)
+qqline(groupE)
+shapiro.test(groupE)
+
+#p-value-то е много малко следователно можем да твърдим че някои от препаратите действат по-добре от други
+oneway.test(count ~ spray, data = InsectSprays)
 
 ```
 
 ```{r}
 
+#3.взимаме данните от файла
+drug_df <- read.csv("./data.txt")
+
+#тъй като имаме сдвоени данни, т.е даваме лекартво на един и същ пациент ползваме aov
+aov(response ~ drug + Error(patient), data = drug_df) %>% summary()
+
+#не можем да отхвърлим хопотезата, че имаме лекарствата действат еднакво
+
 ```
 
 ```{r}
+#4.
+iris
 
+sort1 <- iris$Sepal.Length[iris$Species == 'setosa']
+
+sort2 <- iris$Sepal.Length[iris$Species == 'versicolor']
+
+sort3 <- iris$Sepal.Length[iris$Species == 'virginica']
+
+#checking whether the data is normal distributed
+qqnorm(sort1)
+qqline(sort1)
+shapiro.test(sort1)
+
+qqnorm(sort2)
+qqline(sort2)
+shapiro.test(sort2)
+
+qqnorm(sort3)
+qqline(sort3)
+shapiro.test(sort3)
+
+#all three are normally dirstributed
+
+# формула на модела (имаме два отклика)
+(cbind(iris$Sepal.Length, iris$Sepal.Width) ~ Species) %>%
+  # изпълнение на anova с много у променливи
+  manova(data = iris) %>%
+  # Обобщение
+  summary()
+  # Извод: Различните сортове играят роля за размера на чашелистчетата
+  # някоя от групите има значително различно средно от останалите
 ```
+
+От изпит 2017
+
+```{r}
+#1.
+#number of people younger than 20 yrs
+length(Aids2$age[Aids2$age < 20])
+
+#sex of the patients with earliest diagnosis
+Aids2$sex[head(order(Aids2$diag), 5)]
+
+#men who got aids from blood
+men_blood <- sum(Aids2$sex[Aids2$T.categ == 'blood'] == 'M')
+
+all_men <- sum(Aids2$sex == 'M')
+
+men_blood / all_men
+
+#графика за щатът на пациента и смъртността
+plot(Aids2$state, Aids2$death, na.rm = T)
+
+table(Aids2$status, Aids2$state) %>% prop.table() %>% barplot(legend.text = T)
+
+?Aids2
+
+
+````
+
+```{r}
+#2.
+#total women and women that died
+women <- sum(Aids2$sex == 'F')
+dead_women <- sum(Aids2$status[Aids2$sex == 'F'] == 'D')
+
+men <- sum(Aids2$sex == 'M')
+dead_men <- sum(Aids2$status[Aids2$sex == 'M'] == 'D')
+
+#Х0 - жените умират по-малко Х1 - умират повече
+prop.test(c(dead_women, dead_men), c(women, men), alternative = 'greater')
+#можем да приемем нулевата хипотеза
+
+````
 
 ```{r}
 
-```
+number_dead <- Aids2$age[Aids2$status == 'D']
+
+qqnorm(number_dead)
+qqline(number_dead)
+shapiro.test(number_dead)
+#not normally distributed
+
+#Х0 - средната възраст е 38 Х1 - не е 
+#приемаме h1 хипотеза
+wilcox.test(number_dead, mu = 38, alternative = 'two.sided')
+
+````
+
+```{r}
+#4.
+X <- rchisq(100, df = 10)
+
+hist(X, probability = T)
+
+lines(dchisq(0:30, df = 10))
+````
 
 ```{r}
 
-```
+#5.
+cat <- cats[cats$Sex == 'M', ]
+
+#create the model
+s <- lm(Hwt ~ Bwt, data = cat) %>% summary()
+#based on the model we get that the heart and body weight are not independant 
+#демек са зависими и сърцето се повлиява от теглото на котката
+
+t <- (s$coefficients[2, 1] - 5) / s$coefficients[2, 2]
+#t is negative => we calculate p-value like this:
+#df is equal to: numOfObservations - numOfEvaluatedParameters - 1
+#            so: 97 - 2 - 1 = 94
+#Вярно ли е, че при котки по тежки с 1 кг сърцето е по тежко с 5 гр - H0
+pval = 2 * pt(t, df = 94)
+#тук имаме p-value < 0.05 което значи че отхвърляме нулевата хипотеза, т.е горното не е вярно
+
+# pval = 2 * pt(t, df = 94, lower.tail = F) if t > 0 only lower tail
+
+#we test if the distribution is normal so we can do t.test to get the conf.interval
+shapiro.test(cat$Hwt[cat$Bwt == 2.6])
+
+hist(cat$Hwt[cat$Bwt == 2.6])
+#it is norm dist so we use t.test else we use wilcox.test()
+t.test(cat$Hwt[cat$Bwt == 2.6], conf.level = 0.95)
+
+````
+
+От примерен тест 2017
+
+```{r}
+#1.
+qnorm(p = 0.05)
+
+````
+
+```{r}
+#2.
+nrow(state.x77)
+
+#подреждаме щатите по ниво на необразованост
+dumb_states <- head(order(state.x77[,3], decreasing = T), 5)
+#взимаме ги според индексите на първите 5 щата
+state.x77[dumb_states, 3]
+
+#states with life expectancy over 70
+old_states <- state.x77[1:50, 4] > 70
+length(state.x77[old_states, 4])
+
+#щат с най-голяма гъстота на населението
+pop <- state.x77[1:50,1]
+
+land <- state.x77[1:50, 8]
+
+density <- pop / land
+
+density[head(order(density, decreasing = T), 1)]
+
+#общото население на петте най-големи щати
+biggest_states <- head(order(state.x77[1:50, 8], decreasing = T), 5)
+sum(state.x77[biggest_states, 1])
+
+````
+
+
+```{r}
+#3.ho - има по-малко подобрили се жени х1- има повече подобрили се мъже
+women <- 200
+men <- 100
+
+not_accepted_women <- women * 38 / 100
+not_accepted_men <- men * 50 / 100
+
+#приемаме хипотезата че е по-ефективно при жените отколкото при мъжете
+prop.test(c(not_accepted_women, not_accepted_men), c(women, men), alternative = 'greater' )
+
+````
+
+
+```{r}
+#4.
+ data <- data.frame(
+anscombe$x3,
+anscombe$x4)
+
+l <- lm(data$anscombe.x3 ~ data$anscombe.x4, data = data) 
+
+plot(data$anscombe.x3, data$anscombe.x4)
+abline(l, col = "red ", lwd = 2)
+
+````
+
+
+```{r}
+
+````
+
+
+```{r}
+
+````

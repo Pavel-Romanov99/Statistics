@@ -6,6 +6,7 @@
 
 #данните, които имаме
 observed <- c(125, 410, 310, 300, 318, 298, 148)
+
 #нулевата хипотеза
 expected <- mean(observed)
 #формулата
@@ -23,7 +24,7 @@ chisq.test(observed)
 # Вярно ли е всяка цифра се среща с една и съща вероятност.
 library("UsingR")
 
-#взимаме данните
+#взимаме данните+
 observed <- pi2000[1:200] %>% table() %>% unname()
 
 chisq.test(observed)
