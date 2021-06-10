@@ -827,44 +827,187 @@ Oт упражнение 12
 
 ```{r}
 
+#1.
+?mtcars
+#за да видим дали две променливи са с линейна връзка то ние ги чертаем и гледаме дали точковите 
+#стойности са близо до правата х = у
+
+plot(mtcars)
+
+#има линейна примерно между разхода на гориво и (disp, hp, drat, wt, qsec)
+#ще направим линеен модел с тях
+
+l = lm(mpg ~ . , data = mtcars)
+
+summary(l)
+#от таблицата получаваме че wt има най-голяма зависимост с mpg
+
+l2 = lm(mpg ~ wt, data = mtcars)
+
+summary(l2)
+
+#после можем да добавяме и други променливи така, че моделът да е най-точен, т.е adjustedRvalue да е близо до 1
+
+l3 = lm(mpg ~ wt + hp, data = mtcars)
+
+summary(l3)
+
+l4 = lm(mpg ~ wt + hp + cyl, data = mtcars)
+
+#като добавихме и cyl, от хп стана < 0.05 т.е не влияе и можем да го махнем
+summary(l4)
+
+
+```
+
+```{r}
+
+height = read.csv('height.txt', sep = '\t')
+
+height$Height = height$Height * 2.54
+height$momheight = height$momheight * 2.54
+height$dadheight = height$dadheight * 2.54
+
+#пробвах и с двете и поотделно, но излиза че височината на момичето зависи най-много от 
+#височината на майката и на бащата едновременно
+l = lm(Height ~ dadheight + momheight, data = height)
+
+summary(l)
+
+#предсказваме височината на момичетата, ако родителите им имат следните височини и искаме conf.level = 98 %
+predict.lm(l, new_data = data.fram(
+  momheight = c(160, 162, 166),
+  dadheight = c(176, 180, 185)),
+  interval = 'confidence',
+  level = 0.98
+)
+
+```
+
+```{r}
+#3.
+galileo <- data.frame(
+  height = c(100, 200, 300, 450, 600, 800, 1000),
+  distance = c(253, 337, 395, 451, 495, 534, 574)
+)
+
+# Линейната регресия е линейна защото се разглежда линейна функция на параметричното пространство
+# Можем да прилагаме всякакви трансформации
+model <- lm(distance ~ height + I(height^2), data = galileo)
+summary(model)
+
+# плот на данните и напаснатите данни от модела
+plot(galileo)
+lines(galileo$height, fitted(model), type = "l", col = "red")
+
+# Добра практика е да проверим дали остатъците са нормално разпределени и независими
+# residual analysis
+
+# Първите два плота от следващия ред ни дават добра идея за това
+plot(model)
+
+```
+
+```{r}
+#4.
+?homeprice
+
+#проверяваме за линейна връзка между променливите
+plot(homeprice)
+
+l = lm(list ~ full + half + bedrooms + rooms + neighborhood, data = homeprice)
+summary(l)
+
+#най-голямо влияние има neighborhood, но като добавим другите две има най-високот adjusted-R-squared
+l1 = lm(list ~ neighborhood + bedrooms + rooms, data = homeprice)
+summary(l1)
+
+#можем ли да смятаме, че допълнителна баня прави цената по-скъпа с 15000?
+l2 = lm(list ~ full, data = homeprice)
+sum1 = summary(l2)
+
+tab = sum1$coefficients
+
+#искаме да видим дали коеф Б1 = 15 това ще ние х0
+t = (tab[2,1] - 15) / tab[2,2]
+
+pt(t, length(length(homeprice) - 2), lower.tail = F)
+#понеже pt > 0 слагаме lower.tail = F
+
+#we accept H0 that means B1 = 15
+
 ```
 
 От упражнение 13
 
 ```{r}
-#нулевата хипотеза е че имат равни средни трите извадки от данни
-#правим дата фрейм с данните от задачата
-  exams_df <- data.frame(
-examinor1 = c(5, 4, 4, 6, 4, 6, 3, 3, 4, 5),
-examinor2 = c(3, 2, 4, 5, 3, 4, 3, 4, 2, 4),
-examinor3 = c(4 ,6 ,4 ,2 ,4 ,5 ,5 ,3 ,6 ,4)
-) 
+#generate samples
+x = rnorm(10, 2, 1)
+y = rnorm(10, 3, 1)
+z = rnorm(10, 2, 1)
 
- stacked_exam_df <- stack(exams_df)
- 
-#гледаме дали са нормално разпределени данните
- 
-qqnorm(exams_df$examinor1)
-qqline(exams_df$examinor1)
-shapiro.test(exams_df$examinor1)
+#mean of the samples
+mx = mean(x)
+my = mean(y)
+mz = mean(z)
 
-qqnorm(exams_df$examinor2)
-qqline(exams_df$examinor2)
-shapiro.test(exams_df$examinor2)
- 
-qqnorm(exams_df$examinor3)
-qqline(exams_df$examinor3)
-shapiro.test(exams_df$examinor3)
- 
-#и трите са нормално  разпределени тоест можем да направим тест дали имат еднакво средно ако са норм разпр
+#calculate within
+wSS = (var(x) + var(y) + var(z) ) * 9
 
-oneway.test(values ~ ind, data = stacked_exam_df)
+#calculate mean
+m = mean(c(x,y,z))
 
-#Не можем да отхвърлим хипотезата че имат равни средни
-#друг начин да се провери съшата хипотеза
+#calculate between
+bSS = ((mx - m)^2 + (my - m)^2 + (mz - z)^2) * 10
 
-anova(lm(values ~ ind, data = stacked_exam_df))
+#calculate total = within + between
+tSS = var(c(x,y,z)) * 29
+
+#calculate f 
+f = (bSS / 2) / (wSS / 27)
+
+#calculte the p-value for H0: средните на х,у,з са равни H1: не са
+1 - pf(f, 2, 27)
+
+
+#като работим с функции с дисперсионен анализ те се приемат по следния начин
+d = data.frame(x,y,z)
+
+s = stack(d)
+
+a = aov(values ~ ind, data = s)
+summary(a)
+
 ```
+
+```{r}
+#we create a dataframe with the data
+exam_df = data.frame(
+  examinor1 = c(5, 4, 4, 6, 4, 6, 3, 3, 4, 5),
+  examinor2 = c(3, 2, 4, 5, 3, 4, 3, 4, 2, 4),
+  examinor3 = c(4, 6, 4, 2, 4, 5, 5, 3, 6, 4)
+)
+
+s = stack(exam_df)
+
+boxplot(exam_df)
+
+#we check whether they are normally distributed
+shapiro.test(exam_df$examinor1)
+
+shapiro.test(exam_df$examinor2)
+
+shapiro.test(exam_df$examinor3)
+
+
+#H0 - the samples are the same H1: they are not
+#we do the aov test
+a = aov(values ~ ind, data = s)
+
+summary(a)
+#p-value > 0.05 which means we accept H0 and they are the same
+```
+
 
 ```{r}
 #2.
@@ -889,21 +1032,41 @@ qqline(groupE)
 shapiro.test(groupE)
 
 #p-value-то е много малко следователно можем да твърдим че някои от препаратите действат по-добре от други
-oneway.test(count ~ spray, data = InsectSprays)
+kr = aov(count ~ spray, data = InsectSprays)
+summary(kr)
+
+
+#сега за ц, д и е
+scde = stack(data.frame(groupC, groupD, groupE))
+
+a2 = aov(values ~ ind, data = scde)
+summary(a2)
+#p-value < 0,05 so we can accept H1 that they are not the same
+
 
 ```
 
 ```{r}
+#3.
+drug_df = read.csv('./data.txt')
 
-#3.взимаме данните от файла
-drug_df <- read.csv("./data.txt")
+#понеже данните номер на пациент и номер на лекарсво са все едно името му, а не някакво подреждане правим фактор
+#тъй като един пациент взима няколко лекарства то по стълбове имаме едни и същи хора демек данните са своени
 
-#тъй като имаме сдвоени данни, т.е даваме лекартво на един и същ пациент ползваме aov
-aov(response ~ drug + Error(patient), data = drug_df) %>% summary()
+drug_df$patient = as.factor(drug_df$patient)
+drug_df$drug = as.factor(drug_df$drug)
 
-#не можем да отхвърлим хопотезата, че имаме лекарствата действат еднакво
+drug_df
+str(drug_df)
+
+#правим теста на това как респонсе зависи от лекарството като в еррор пишем пациенти понеже данните са сдвоени
+a3 = aov(response ~ drug + Error(patient), data = drug_df)
+
+#p-value < 0.05 следователно различните лекарства действат по различен начин на пациентите
+summary(a3)
 
 ```
+
 
 ```{r}
 #4.
